@@ -88,6 +88,7 @@ class Matrix: public node::ObjectWrap {
     JSFUNC(Depth)
     JSFUNC(ChangeIntensity)
     JSFUNC(ResetMatrix)
+    JSFUNC(SetTo)
     
 /*
 	static Handle<Value> Val(const Arguments& args);

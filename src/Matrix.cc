@@ -91,6 +91,8 @@ Matrix::Init(Handle<Object> target) {
     NODE_SET_PROTOTYPE_METHOD(constructor, "depth", Depth);
     NODE_SET_PROTOTYPE_METHOD(constructor, "changeIntensity", ChangeIntensity);
     NODE_SET_PROTOTYPE_METHOD(constructor, "resetMatrix", ResetMatrix);
+    NODE_SET_PROTOTYPE_METHOD(constructor, "setTo", SetTo);
+    
 
 	NODE_SET_METHOD(constructor, "Eye", Eye);
 
@@ -1559,6 +1561,22 @@ Matrix::ResetMatrix(const v8::Arguments& args) {
     unsigned int type = args[2]->IsUndefined() ? CV_8UC3 : args[2]->Uint32Value();
   
     self->mat = cv::Mat(rows, cols, type);
+    
+    return scope.Close(Undefined());
+}
+
+
+Handle<Value>
+Matrix::SetTo(const v8::Arguments& args) {
+    HandleScope scope;
+    
+    Matrix * self = ObjectWrap::Unwrap<Matrix>(args.This());
+    cv::Scalar color(0, 0, 0);
+    if (args[0]->IsArray()) {
+        Local<Object> objColor = args[0]->ToObject();
+        color = setColor(objColor);
+    }
+    self->mat.setTo(color);
     
     return scope.Close(Undefined());
 }
