@@ -90,6 +90,7 @@ Matrix::Init(Handle<Object> target) {
     NODE_SET_PROTOTYPE_METHOD(constructor, "histImage", HistImage);
     NODE_SET_PROTOTYPE_METHOD(constructor, "depth", Depth);
     NODE_SET_PROTOTYPE_METHOD(constructor, "changeIntensity", ChangeIntensity);
+    NODE_SET_PROTOTYPE_METHOD(constructor, "resetMatrix", ResetMatrix);
 
 	NODE_SET_METHOD(constructor, "Eye", Eye);
 
@@ -1540,6 +1541,24 @@ Matrix::ChangeIntensity(const v8::Arguments& args) {
             img->at<unsigned char>(i,j) = (unsigned char) (valueMap->Get(val)->IntegerValue());
         }
     }
+    
+    return scope.Close(Undefined());
+}
+
+
+// Constructor replacer
+Handle<Value>
+Matrix::ResetMatrix(const v8::Arguments& args) {
+    HandleScope scope;
+    
+    Matrix * self = ObjectWrap::Unwrap<Matrix>(args.This());
+    ~self->mat;
+
+    unsigned int rows = args[0]->Uint32Value();
+    unsigned int cols = args[1]->Uint32Value();
+    unsigned int type = args[2]->IsUndefined() ? CV_8UC3 : args[2]->Uint32Value();
+  
+    self->mat = cv::Mat(rows, cols, type);
     
     return scope.Close(Undefined());
 }

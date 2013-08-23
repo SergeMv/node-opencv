@@ -87,6 +87,7 @@ class Matrix: public node::ObjectWrap {
     JSFUNC(HistImage)
     JSFUNC(Depth)
     JSFUNC(ChangeIntensity)
+    JSFUNC(ResetMatrix)
     
 /*
 	static Handle<Value> Val(const Arguments& args);
