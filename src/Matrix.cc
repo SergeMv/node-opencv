@@ -89,6 +89,7 @@ Matrix::Init(Handle<Object> target) {
     NODE_SET_PROTOTYPE_METHOD(constructor, "calcHistFromOneChannel", CalcHistFromOneChannel);
     NODE_SET_PROTOTYPE_METHOD(constructor, "histImage", HistImage);
     NODE_SET_PROTOTYPE_METHOD(constructor, "depth", Depth);
+    NODE_SET_PROTOTYPE_METHOD(constructor, "changeIntensity", ChangeIntensity);
 
 	NODE_SET_METHOD(constructor, "Eye", Eye);
 
@@ -1511,4 +1512,34 @@ Handle<Value>
 Matrix::Depth(const Arguments& args){
     SETUP_FUNCTION(Matrix)
 	return scope.Close(Number::New(self->mat.depth()));
+}
+
+
+// @author SergeMv
+// Changes values of a channel image (like intensity) by some function (map),
+// represented as an array of x => y, where both x and y are in the region of [0..255]
+// @param {Array} of size of 256, which values are integers from 0 to 255
+Handle<Value>
+Matrix::ChangeIntensity(const v8::Arguments& args) {
+    HandleScope scope;
+    
+    Matrix * self = ObjectWrap::Unwrap<Matrix>(args.This());
+    cv::Mat *img = &self->mat;
+    if (!args[0]->IsArray()) {
+        return v8::ThrowException(Exception::TypeError(String::New(
+			"The argument must be an array")));
+    }
+    v8::Handle<v8::Array> valueMap = v8::Handle<v8::Array>::Cast(args[0]); 
+    
+    int width = img->rows;
+    int height = img->cols;
+    int i, j, val;
+    for (i = 0; i < width; i++) {
+        for (j = 0; j < height; j++) {
+            val = img->at<unsigned char>(i,j);
+            img->at<unsigned char>(i,j) = (unsigned char) (valueMap->Get(val)->IntegerValue());
+        }
+    }
+    
+    return scope.Close(Undefined());
 }
