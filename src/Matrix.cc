@@ -218,6 +218,10 @@ Matrix::Set(const Arguments& args){
 
         break;
 
+      case CV_32FC1:
+        self->mat.at<float>(i,j) = val;
+        break;
+
       default:
         self->mat.at<double>(i,j) = val;
     }
