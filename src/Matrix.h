@@ -85,6 +85,7 @@ class Matrix: public node::ObjectWrap {
     
     JSFUNC(CalcHistFromOneChannel)
     JSFUNC(HistImage)
+    JSFUNC(Depth)
     
 /*
 	static Handle<Value> Val(const Arguments& args);

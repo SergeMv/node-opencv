@@ -88,6 +88,7 @@ Matrix::Init(Handle<Object> target) {
     NODE_SET_PROTOTYPE_METHOD(constructor, "equalizeHist", EqualizeHist);
     NODE_SET_PROTOTYPE_METHOD(constructor, "calcHistFromOneChannel", CalcHistFromOneChannel);
     NODE_SET_PROTOTYPE_METHOD(constructor, "histImage", HistImage);
+    NODE_SET_PROTOTYPE_METHOD(constructor, "depth", Depth);
 
 	NODE_SET_METHOD(constructor, "Eye", Eye);
 
@@ -169,7 +170,13 @@ Matrix::DblGet(cv::Mat mat, int i, int j){
     case CV_32SC1:
         val = mat.at<int>(i,j);
         break;
-        
+    
+    // image channel
+    case CV_8UC1:
+        val = (double) (mat.at<unsigned char>(i,j));
+        break;
+    
+    // histogram
     case CV_32FC1:
         val = mat.at<float>(i,j);
         break;
@@ -218,8 +225,14 @@ Matrix::Set(const Arguments& args){
 
         break;
 
+      // histogram
       case CV_32FC1:
         self->mat.at<float>(i,j) = val;
+        break;
+    
+      // image channel
+      case CV_8UC1:
+        self->mat.at<unsigned char>(i,j) = (unsigned char)(round(val));
         break;
 
       default:
@@ -1481,4 +1494,21 @@ Matrix::HistImage(const v8::Arguments& args) {
     m->mat = graph;
     
     return scope.Close(matObject);
+}
+
+/*
+ * Depth values are:
+#define CV_8U   0
+#define CV_8S   1
+#define CV_16U  2
+#define CV_16S  3
+#define CV_32S  4
+#define CV_32F  5
+#define CV_64F  6
+#define CV_USRTYPE1 7
+ */
+Handle<Value>
+Matrix::Depth(const Arguments& args){
+    SETUP_FUNCTION(Matrix)
+	return scope.Close(Number::New(self->mat.depth()));
 }
