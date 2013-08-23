@@ -86,8 +86,8 @@ Matrix::Init(Handle<Object> target) {
     NODE_SET_PROTOTYPE_METHOD(constructor, "split", Split);
     NODE_SET_PROTOTYPE_METHOD(constructor, "merge", Merge);
     NODE_SET_PROTOTYPE_METHOD(constructor, "equalizeHist", EqualizeHist);
-    NODE_SET_PROTOTYPE_METHOD(constructor, "calcHistFrom1Channel", CalcHistFrom1Channel);
-    NODE_SET_PROTOTYPE_METHOD(constructor, "histGraph", HistGraph);
+    NODE_SET_PROTOTYPE_METHOD(constructor, "calcHistFromOneChannel", CalcHistFromOneChannel);
+    NODE_SET_PROTOTYPE_METHOD(constructor, "histImage", HistImage);
 
 	NODE_SET_METHOD(constructor, "Eye", Eye);
 
@@ -168,6 +168,10 @@ Matrix::DblGet(cv::Mat mat, int i, int j){
       
     case CV_32SC1:
         val = mat.at<int>(i,j);
+        break;
+        
+    case CV_32FC1:
+        val = mat.at<float>(i,j);
         break;
 
     default:
@@ -1410,34 +1414,23 @@ Matrix::EqualizeHist(const v8::Arguments& args) {
 
 
 // @author SergeMv
-// Calculates histogram for 1 channel images
-// var histMatrix = img.CalcHistFrom1Channel();
-// where histMatrix is a 1x256 Matrix
+// Calculates histogram for 1 channel images (like R, G, B or intensity)
+// var histMatrix = img.calcHistFromOneChannel();
+// where histMatrix is a 256x1 Matrix (with CV_32FC1 type) 
 Handle<Value>
-Matrix::CalcHistFrom1Channel(const v8::Arguments& args) {
+Matrix::CalcHistFromOneChannel(const v8::Arguments& args) {
     HandleScope scope;
     
     Matrix * self = ObjectWrap::Unwrap<Matrix>(args.This());
     cv::Mat * img = &self->mat;
     
-    // Create histogram array and init it with zeroes
-    cv::Mat hist = cv::Mat::zeros(1, 256, CV_32SC1);
-    // Calculate the histogram of the image
-    unsigned char val;
-    for (int i = 0; i < img->rows; i++) {
-        for (int j = 0; j < img->cols; j++) {
-            val = img->at<unsigned char>(i, j);
-            hist.at<int>(val) += 1;
-        }
-    }
-    
-    /*
     cv::Mat hist;
     int histSize = 256;
     float range[] = { 0, 256 } ;
     const float* histRange = { range };
 
-    cv::calcHist(img, 1, 0, 
+    cv::calcHist(img, 1, 
+        0, // channels
         cv::Mat(), // empty mask
         hist, 
         1, 
@@ -1446,8 +1439,6 @@ Matrix::CalcHistFrom1Channel(const v8::Arguments& args) {
         true, // uniform
         false  // accumulate
         );
-    cv::normalize(hist, hist, 0, 256, cv::NORM_MINMAX, -1, cv::Mat() );
-    */
 
     Local<Object> matObject = Matrix::constructor->GetFunction()->NewInstance();
     Matrix * m = ObjectWrap::Unwrap<Matrix>(matObject);
@@ -1456,27 +1447,13 @@ Matrix::CalcHistFrom1Channel(const v8::Arguments& args) {
     return scope.Close(matObject);
 }
 
-/*
-// @author SergeMv
-// Calculates max value for a histogram created with CalcHistFrom1Channel()
-Handle<Value>
-Matrix::histMaxValue(const v8::Arguments& args) {
-    HandleScope scope;
-    
-    Matrix * self = ObjectWrap::Unwrap<Matrix>(args.This());
-    double maxVal;
-    minMaxLoc(self->mat, NULL, &maxVal, 0, 0);
-    
-    return scope.Close(Number::New(maxVal));
-}
-*/
-
 
 // @author SergeMv
-// Calculates graph Matrix for a histogram created with CalcHistFrom1Channel()
-// var graphMatrix = histMatrix.histGraph();
+// Creates graph image for a histogram created with calcHistFromOneChannel()
+// var graphMatrix = histMatrix.histImage();
+// where graphMatrix is a 256x256 matrix
 Handle<Value>
-Matrix::HistGraph(const v8::Arguments& args) {
+Matrix::HistImage(const v8::Arguments& args) {
     HandleScope scope;
     
     Matrix * self = ObjectWrap::Unwrap<Matrix>(args.This());
@@ -1488,17 +1465,11 @@ Matrix::HistGraph(const v8::Arguments& args) {
     cv::Scalar color(0, 0, 0);
     int thickness = 1;
     
-    double maxVal;
-    cv::minMaxLoc(self->mat, NULL, &maxVal, 0, 0);
-    
+    cv::normalize(self->mat, self->mat, 0, 256, cv::NORM_MINMAX, -1, cv::Mat() );
+      
     for (int i = 0; i < 256; i++) {
-        cv::line(graph, cv::Point(i, 256 - self->mat.at<int>(i) * 256 / maxVal), 
-            cv::Point(i, 255), color, thickness);
-        
-        /*
          cv::line(graph, cv::Point(i, 256 - self->mat.at<float>(i)), 
-            cv::Point(i, 255), color, thickness);
-        */
+            cv::Point(i, 255), color, thickness);        
     }
     
     Local<Object> matObject = Matrix::constructor->GetFunction()->NewInstance();

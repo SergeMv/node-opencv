@@ -83,8 +83,8 @@ class Matrix: public node::ObjectWrap {
     JSFUNC(Merge)
     JSFUNC(EqualizeHist)
     
-    JSFUNC(CalcHistFrom1Channel)
-    JSFUNC(HistGraph)
+    JSFUNC(CalcHistFromOneChannel)
+    JSFUNC(HistImage)
     
 /*
 	static Handle<Value> Val(const Arguments& args);
